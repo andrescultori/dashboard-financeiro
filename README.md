@@ -1,8 +1,10 @@
+🇧🇷 Português | [🇺🇸 English](README.en.md)
+
 # 📊 Financeiro Dashboard — Fluxo de caixa em tempo real, com automação de ponta a ponta
 
 Um dashboard financeiro interativo, construído como **um único arquivo HTML autossuficiente** (sem build, sem dependências externas em runtime), alimentado por um pipeline de automação que lê dados direto de um ERP financeiro, consolida, e publica sozinho — sem intervenção manual.
 
-**[🔗 Ver demonstração ao vivo](#)** *(publique este `index.html` no GitHub Pages/Netlify e cole o link aqui)*
+**[🔗 Ver demonstração ao vivo](#)**
 Senha de demonstração: `demo2026`
 
 > ⚠️ **Todos os dados neste repositório são fictícios**, gerados aleatoriamente para fins de demonstração. Este projeto é uma adaptação, com dados substituídos, de um sistema real em produção para uma instituição educacional sem fins lucrativos.
