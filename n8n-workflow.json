@@ -1,0 +1,345 @@
+{
+  "name": "Financial Report - Publish to Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        128
+      ],
+      "id": "143d8fd9-c5d4-48ef-a261-df2b72aead07",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://login.microsoftonline.com/{{ $env.GRAPH_TENANT_ID }}/oauth2/v2.0/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "={{ $env.GRAPH_CLIENT_ID }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $env.GRAPH_CLIENT_SECRET }}"
+            },
+            {
+              "name": "scope",
+              "value": "https://graph.microsoft.com/.default"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        128
+      ],
+      "id": "4f9f4a0c-464a-431c-9c99-861a3a076025",
+      "name": "Obter Token Graph"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.value;\nconst porMes = {};\n\nfor (const f of items) {\n  const m = f.name.match(/Relatorio_Unificado (\\d{4}-\\d{2})\\.xlsx$/i);\n  if (!m) continue; // ignora qualquer arquivo fora do padrão de nome\n  const mes = m[1];\n  const atual = porMes[mes];\n  if (!atual || new Date(f.lastModifiedDateTime) > new Date(atual.lastModifiedDateTime)) {\n    porMes[mes] = f;\n  }\n}\n\nreturn Object.values(porMes).map(f => ({ json: f }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        128
+      ],
+      "id": "e206c088-ff34-491c-a39c-82f193373758",
+      "name": "Escolher Mais Recente por Mês"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/sites/{{ $env.GRAPH_SITE_ID }}/drives/{{ $env.GRAPH_DRIVE_ID }}/root:/General/Financeiro/Relatorios:/children",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Obter Token Graph').item.json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        128
+      ],
+      "id": "f812c996-86b6-48ec-a2bb-d8642973f884",
+      "name": "Listar Arquivos da Pasta"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['@microsoft.graph.downloadUrl'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        128
+      ],
+      "id": "56f844f1-ded5-4e57-816a-34a5646493ec",
+      "name": "Baixar Arquivo"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        128
+      ],
+      "id": "ff9c476f-5a73-44ee-885d-a2c6cd7f5d6b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/sites/{{ $env.GRAPH_SITE_ID }}/drives/{{ $env.GRAPH_DRIVE_ID }}/root:/General/Financeiro/dashboard-template.html:/content",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Obter Token Graph').item.json.access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        128
+      ],
+      "id": "f2fa4d24-f359-4252-96f6-4eb5a56e0850",
+      "name": "Buscar Molde HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $('Buscar Molde HTML').item.json.data; // ajuste \"data\" se o campo tiver outro nome\nconst dashboardData = $('Consolidar Dashboard').item.json; // troque pelo nome exato que você deu ao node 7\nconst jsonText = JSON.stringify(dashboardData);\nconst finalHtml = html.replace('{{DASHBOARD_DATA_JSON}}', jsonText);\nreturn [{ json: { html: finalHtml } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        128
+      ],
+      "id": "13fff3f7-4aeb-4af8-af30-3ad2fdd4626d",
+      "name": "Substituir Placeholder"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node — Consolidação dos dados financeiros para o Dashboard.\n *\n * Onde encaixar: logo após o node que lê todas as linhas da aba \"NIBO\"\n * do Excel (Microsoft Excel 365 → Search rows / Get rows). Este node\n * espera receber, em $input.all(), um item por linha da planilha, com\n * as colunas: Pagamento ou recebimento, Categoria, Valor pago, Valor recebido\n * (as demais colunas — Contato, Descrição, Centro de Custo, etc. — não\n * são usadas aqui, podem estar presentes sem problema).\n *\n * Saída: um único item, cujo campo `json` é exatamente o objeto que o\n * dashboard espera. No node seguinte (que troca o placeholder no molde\n * do HTML), use uma expressão tipo:\n *   {{ JSON.stringify($json) }}\n * para pegar o texto pronto a inserir no lugar de {{DASHBOARD_DATA_JSON}}.\n */\n\nconst DATE_COL = 'Pagamento ou recebimento';\nconst CAT_COL = 'Categoria';\nconst PAGO_COL = 'Valor pago';\nconst RECEBIDO_COL = 'Valor recebido';\n\n/* Saldo de abertura manual, referente à posição em 31/12/2024 — os exports\n   mensais só começam em janeiro/2025, então esse valor fixo substitui o\n   que antes era um lançamento manual no Excel mestre. Não deve mudar de novo. */\nconst OPENING_BALANCE = 18631.43;\n\nfunction parseDate(v) {\n  if (v instanceof Date && !isNaN(v)) return v;\n  if (typeof v === 'string' && v.trim()) {\n    const s = v.trim();\n    // formato dd/mm/aaaa\n    const parts = s.split('/');\n    if (parts.length === 3 && parts[2].length === 4) {\n      const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);\n      const dt = new Date(y, m - 1, d);\n      if (!isNaN(dt)) return dt;\n    }\n    // formato ISO 8601 (ex: 2026-06-05T15:30:00Z)\n    const iso = new Date(s);\n    if (!isNaN(iso)) return iso;\n  }\n  return null;\n}\n\nfunction cleanCat(c) {\n  if (!c) return '(Sem categoria)';\n  return String(c).trim().replace(/\\s+/g, ' ');\n}\n\nfunction parseNumber(v) {\n  if (typeof v === 'number') return v;\n  if (typeof v === 'string') {\n    let s = v.trim();\n    if (!s) return 0;\n    if (s.indexOf(',') !== -1) {\n      s = s.replace(/\\./g, '').replace(',', '.');\n    }\n    const n = parseFloat(s);\n    return isNaN(n) ? 0 : n;\n  }\n  return 0;\n}\n\nfunction round2(v) { return Math.round((Number(v) || 0) * 100) / 100; }\nfunction pad2(n) { return (n < 10 ? '0' : '') + n; }\nfunction ymd(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }\nfunction ym(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }\nfunction fmtDate(d) { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear(); }\n\n// ---- Lê os itens vindos do node anterior (uma linha da planilha por item) ----\nconst inputItems = $input.all();\n\nconst rows = [];\nfor (const item of inputItems) {\n  const r = item.json;\n  const dateVal = parseDate(r[DATE_COL]);\n  if (!dateVal) continue; // em aberto (sem data de liquidação) — ignora\n  rows.push({\n    date: dateVal,\n    credit: Math.abs(parseNumber(r[RECEBIDO_COL])),\n    debit: -Math.abs(parseNumber(r[PAGO_COL])),\n    cat: cleanCat(r[CAT_COL])\n  });\n}\n\nif (rows.length === 0) {\n  throw new Error('Nenhuma linha com \"' + DATE_COL + '\" válida encontrada.');\n}\n\nrows.sort((a, b) => a.date - b.date);\n\nconst years = Array.from(new Set(rows.map(r => r.date.getFullYear()))).sort();\n\n// ---- Mensal ----\nconst monthly = {};\nrows.forEach(r => {\n  const k = ym(r.date);\n  if (!monthly[k]) monthly[k] = { credit: 0, debit: 0 };\n  monthly[k].credit += r.credit;\n  monthly[k].debit += r.debit;\n});\nconst allMonths = Object.keys(monthly).sort();\nlet cum = OPENING_BALANCE;\nconst monthEndCum = {};\nallMonths.forEach(k => {\n  const net = monthly[k].credit + monthly[k].debit;\n  cum = round2(cum + net);\n  monthly[k] = {\n    credit: round2(monthly[k].credit),\n    debit: round2(monthly[k].debit),\n    net: round2(net),\n    cum: cum\n  };\n  monthEndCum[k] = cum;\n});\nconst monthStartCum = {};\nlet prevCum = OPENING_BALANCE;\nallMonths.forEach(k => {\n  monthStartCum[k] = round2(prevCum);\n  prevCum = monthEndCum[k];\n});\n\n// ---- Diário ----\nconst daily = {};\nrows.forEach(r => {\n  const k = ymd(r.date);\n  if (!daily[k]) daily[k] = { credit: 0, debit: 0 };\n  daily[k].credit += r.credit;\n  daily[k].debit += r.debit;\n});\nObject.keys(daily).forEach(k => {\n  daily[k].credit = round2(daily[k].credit);\n  daily[k].debit = round2(daily[k].debit);\n  daily[k].net = round2(daily[k].credit + daily[k].debit);\n});\n\n// ---- Categoria por ano / mês / dia ----\nfunction addToCat(bucket, key, cat, r) {\n  if (!bucket[key]) bucket[key] = {};\n  if (!bucket[key][cat]) bucket[key][cat] = { credit: 0, debit: 0 };\n  bucket[key][cat].credit += r.credit;\n  bucket[key][cat].debit += r.debit;\n}\nfunction roundCatBucket(bucket) {\n  Object.keys(bucket).forEach(key => {\n    Object.keys(bucket[key]).forEach(cat => {\n      bucket[key][cat].credit = round2(bucket[key][cat].credit);\n      bucket[key][cat].debit = round2(bucket[key][cat].debit);\n    });\n  });\n}\n\nconst catYear = {}, catMonth = {}, catDay = {};\nrows.forEach(r => {\n  addToCat(catYear, String(r.date.getFullYear()), r.cat, r);\n  addToCat(catMonth, ym(r.date), r.cat, r);\n  addToCat(catDay, ymd(r.date), r.cat, r);\n});\nroundCatBucket(catYear);\nroundCatBucket(catMonth);\nroundCatBucket(catDay);\n\nconst dashboardData = {\n  years: years,\n  period: { min: fmtDate(rows[0].date), max: fmtDate(rows[rows.length - 1].date) },\n  monthly: monthly,\n  month_start_cum: monthStartCum,\n  daily: daily,\n  category_by_year: catYear,\n  category_by_month: catMonth,\n  category_by_day: catDay\n};\n\nreturn [{ json: dashboardData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        128
+      ],
+      "id": "24fba693-c763-44f6-b1c5-44affa1494d2",
+      "name": "Consolidar Dashboard"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2016,
+        128
+      ],
+      "id": "f110b529-0312-4937-b03b-d6f7d99bd849",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const https = require('https');\nconst crypto = require('crypto');\n\nfunction httpsRequest(options, body) {\n  return new Promise((resolve, reject) => {\n    const req = https.request(options, (res) => {\n      const chunks = [];\n      res.on('data', (c) => chunks.push(c));\n      res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString() }));\n    });\n    req.on('error', reject);\n    if (body) req.write(body);\n    req.end();\n  });\n}\n\nconst htmlBuffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sha1 = crypto.createHash('sha1').update(htmlBuffer).digest('hex');\n\n// Passo 1: cria o deploy informando o hash do arquivo\nconst createBody = JSON.stringify({ files: { '/index.html': sha1 } });\nconst createResp = await httpsRequest({\n  hostname: 'api.netlify.com',\n  path: `/api/v1/sites/${$env.NETLIFY_SITE_ID}/deploys`,\n  method: 'POST',\n  headers: {\n    'Authorization': `Bearer ${$env.NETLIFY_TOKEN}`,\n    'Content-Type': 'application/json',\n    'Content-Length': Buffer.byteLength(createBody)\n  }\n}, createBody);\n\nconst deploy = JSON.parse(createResp.body);\n\n// Passo 2: se a Netlify pedir o conteúdo (arquivo novo/alterado), envia os bytes brutos\nlet uploadResult = null;\nif (deploy.required && deploy.required.includes(sha1)) {\n  const uploadResp = await httpsRequest({\n    hostname: 'api.netlify.com',\n    path: `/api/v1/deploys/${deploy.id}/files/index.html`,\n    method: 'PUT',\n    headers: {\n      'Authorization': `Bearer ${$env.NETLIFY_TOKEN}`,\n      'Content-Type': 'application/octet-stream',\n      'Content-Length': htmlBuffer.length\n    }\n  }, htmlBuffer);\n  uploadResult = JSON.parse(uploadResp.body);\n}\n\nreturn [{ json: { deploy, uploadResult, sha1, tamanho: htmlBuffer.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        128
+      ],
+      "id": "4b64245f-3603-4128-9e22-bc58ba0f8f3c",
+      "name": "Publicar Netlify novo"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Obter Token Graph",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter Token Graph": {
+      "main": [
+        [
+          {
+            "node": "Listar Arquivos da Pasta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Arquivos da Pasta": {
+      "main": [
+        [
+          {
+            "node": "Escolher Mais Recente por Mês",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escolher Mais Recente por Mês": {
+      "main": [
+        [
+          {
+            "node": "Baixar Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Arquivo": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Molde HTML": {
+      "main": [
+        [
+          {
+            "node": "Substituir Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Buscar Molde HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Substituir Placeholder": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Publicar Netlify novo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "75fbfaa5-a670-4a0d-b4c1-272bce70c5d4",
+  "meta": {
+    "instanceId": "5d1cbde41cb8bde45f95cede9226e2d041d2ec199f78c24592352ccc1447a979"
+  },
+  "nodeGroups": [],
+  "id": "QoPrvRQw8SbuAO2t",
+  "tags": []
+}
