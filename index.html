@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Financeiro · Instituto Aurora (Demo)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Merriweather:ital,wght@0,400;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    /* Paleta inspirada na identidade visual de um brand book real de cliente
+       (Gunmetal/Mandarin/Soft Pink), adaptada para um projeto de portfólio. */
     --bg: #0E1016;
     --panel: #171A24;
     --panel-2: #1C2030;
@@ -15,12 +17,12 @@
     --text: #F1F2F7;
     --text-dim: #9296A8;
     --text-faint: #5C6076;
-    --credit: #9C8CFF;
-    --credit-dim: #5B4FC4;
-    --debit: #FF9552;
-    --debit-dim: #C9642A;
-    --saldo: #FF5FA0;
-    --saldo-dim: #B33E75;
+    --credit: #A98FE0;
+    --credit-dim: #6B4FC4;
+    --debit: #FF8529;
+    --debit-dim: #C9530E;
+    --saldo: #F1558E;
+    --saldo-dim: #B33366;
     --pos: #6FE3A4;
     --neg: #FF6B6B;
   }
@@ -46,7 +48,7 @@
     border-radius:18px; padding:38px 34px; width:340px; text-align:center;
   }
   .lock-card .brand-mark{ margin:0 auto 16px; }
-  .lock-card h2{ font-family:'Space Grotesk',sans-serif; margin:2px 0 6px; font-size:19px; font-weight:600; }
+  .lock-card h2{ font-family:'Barlow Condensed',sans-serif; margin:2px 0 6px; font-size:19px; font-weight:600; }
   .lock-card p{ color:var(--text-dim); font-size:13px; margin:0 0 22px; line-height:1.5; }
   .lock-loading{ color:var(--text-faint); font-size:12.5px; padding:10px 0; }
   .lock-card input{
@@ -58,7 +60,7 @@
   .lock-card button#pwSubmit{
     width:100%; background:linear-gradient(135deg, var(--credit), var(--saldo));
     border:none; color:#0E1016; font-weight:700; padding:11px; border-radius:9px;
-    cursor:pointer; font-family:'Space Grotesk',sans-serif; font-size:14px;
+    cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-size:14px;
   }
   .ms-btn{
     width:100%; background:#fff; border:1px solid #8a8886; color:#1b1b1b; font-weight:600;
@@ -91,11 +93,11 @@
     width:40px;height:40px;border-radius:10px;
     background: linear-gradient(135deg, var(--credit), var(--saldo));
     display:flex; align-items:center; justify-content:center;
-    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; color:#0E1016;
+    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; color:#0E1016;
     flex-shrink:0;
   }
   h1{
-    font-family:'Space Grotesk', sans-serif;
+    font-family:'Barlow Condensed',sans-serif;
     font-size: 22px;
     font-weight:600;
     margin:0;
@@ -110,7 +112,7 @@
   }
   .nav-tabs button, .year-toggle button{
     border:none; background:transparent; color:var(--text-dim);
-    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px;
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:13.5px;
     padding:8px 16px; border-radius:7px; cursor:pointer;
     transition: background .15s ease, color .15s ease;
     white-space:nowrap;
@@ -123,7 +125,7 @@
 
   .month-select{
     background:var(--panel); border:1px solid var(--border); color:var(--text);
-    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px;
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:13.5px;
     padding:9px 14px; border-radius:10px; cursor:pointer;
   }
 
@@ -152,7 +154,7 @@
     letter-spacing:0.01em;
   }
   .kpi-value{
-    font-family:'Space Grotesk', sans-serif;
+    font-family:'Barlow Condensed',sans-serif;
     font-size: 30px;
     font-weight:700;
     margin-top:6px;
@@ -180,7 +182,7 @@
     margin-bottom:20px;
   }
   .panel-title{
-    font-family:'Space Grotesk', sans-serif;
+    font-family:'Barlow Condensed',sans-serif;
     font-size:15px; font-weight:600; margin:0 0 2px;
   }
   .panel-desc{ font-size:12.5px; color:var(--text-faint); margin-bottom:14px;}
@@ -262,7 +264,7 @@
       <div class="brand-mark">IA</div>
       <div>
         <h1>Financeiro Instituto Aurora</h1>
-        <div class="subtitle">Créditos, débitos e saldo — dados fictícios de demonstração</div>
+        <div class="subtitle" style="font-family:'Merriweather',serif; font-style:italic;">Créditos, débitos e saldo — dados fictícios de demonstração</div>
       </div>
     </div>
     <div class="header-controls">
@@ -725,22 +727,22 @@ function renderCombo(year){
       datasets:[
         {
           type:'bar', label:'Créditos', data: series.credit,
-          backgroundColor: 'rgba(156,140,255,0.85)',
+          backgroundColor: 'rgba(169,143,224,0.85)',
           borderRadius: 4, barPercentage:0.62, categoryPercentage:0.7, order:2,
-          showLabels:true, labelColor:'#C9C2FF', labelFmt: fmtCompact
+          showLabels:true, labelColor:'#D1C3EE', labelFmt: fmtCompact
         },
         {
           type:'bar', label:'Débitos', data: series.debit,
-          backgroundColor: 'rgba(255,149,82,0.85)',
+          backgroundColor: 'rgba(255,133,41,0.85)',
           borderRadius: 4, barPercentage:0.62, categoryPercentage:0.7, order:2,
-          showLabels:true, labelColor:'#FFC199', labelFmt: fmtCompact
+          showLabels:true, labelColor:'#FFC599', labelFmt: fmtCompact
         },
         {
           type:'line', label: activeCategory ? 'Total acumulado' : 'Saldo acumulado', data: series.cum,
-          borderColor: '#FF5FA0', backgroundColor:'#FF5FA0',
-          borderWidth: 2.5, pointRadius: 3, pointBackgroundColor:'#FF5FA0',
+          borderColor: '#F1558E', backgroundColor:'#F1558E',
+          borderWidth: 2.5, pointRadius: 3, pointBackgroundColor:'#F1558E',
           tension: 0.3, order:1, yAxisID:'y',
-          showLabels:true, labelColor:'#FF9BC8', labelFmt: fmtCompact
+          showLabels:true, labelColor:'#F697BA', labelFmt: fmtCompact
         }
       ]
     },
@@ -887,17 +889,17 @@ function renderAnnual(year){
     if (activeCategory) { const v = monthValues(m); runningW = round2(runningW + v.credit + v.debit); return runningW; }
     return DATA.monthly[m].cum;
   });
-  renderSpark('sparkCredit', windowCredit, '#9C8CFF', 'rgba(156,140,255,0.28)', 'rgba(156,140,255,0)');
-  renderSpark('sparkDebit', windowDebit, '#FF9552', 'rgba(255,149,82,0.28)', 'rgba(255,149,82,0)');
-  renderSpark('sparkSaldo', windowCum, '#FF5FA0', 'rgba(255,95,160,0.28)', 'rgba(255,95,160,0)');
+  renderSpark('sparkCredit', windowCredit, '#A98FE0', 'rgba(169,143,224,0.28)', 'rgba(169,143,224,0)');
+  renderSpark('sparkDebit', windowDebit, '#FF8529', 'rgba(255,133,41,0.28)', 'rgba(255,133,41,0)');
+  renderSpark('sparkSaldo', windowCum, '#F1558E', 'rgba(241,85,142,0.28)', 'rgba(241,85,142,0)');
 
   renderCombo(year);
   renderMonthTable(year);
 
   const cats = DATA.category_by_year[String(year)] || {};
   const {creditEntries, debitEntries} = categoryEntries(cats);
-  renderCategoryBars('creditBarChart', creditEntries, 'rgba(156,140,255,0.85)', '#C9C2FF');
-  renderCategoryBars('debitBarChart', debitEntries, 'rgba(255,149,82,0.85)', '#FFC199');
+  renderCategoryBars('creditBarChart', creditEntries, 'rgba(169,143,224,0.85)', '#D1C3EE');
+  renderCategoryBars('debitBarChart', debitEntries, 'rgba(255,133,41,0.85)', '#FFC599');
 
   document.getElementById('footerNote').textContent =
     'Dados fictícios (demo) · ' + series.months.length + ' meses em ' + year + ' · atualizado até ' + DATA.period.max;
@@ -916,20 +918,20 @@ function renderDailyCombo(monthKey){
       datasets:[
         {
           type:'bar', label:'Créditos', data: series.credit,
-          backgroundColor: 'rgba(156,140,255,0.85)',
+          backgroundColor: 'rgba(169,143,224,0.85)',
           borderRadius: 3, barPercentage:0.7, categoryPercentage:0.75, order:2,
-          showLabels:true, labelColor:'#C9C2FF', labelFont:'600 8.5px Inter, sans-serif', labelFmt: fmtCompact
+          showLabels:true, labelColor:'#D1C3EE', labelFont:'600 8.5px Inter, sans-serif', labelFmt: fmtCompact
         },
         {
           type:'bar', label:'Débitos', data: series.debit,
-          backgroundColor: 'rgba(255,149,82,0.85)',
+          backgroundColor: 'rgba(255,133,41,0.85)',
           borderRadius: 3, barPercentage:0.7, categoryPercentage:0.75, order:2,
-          showLabels:true, labelColor:'#FFC199', labelFont:'600 8.5px Inter, sans-serif', labelFmt: fmtCompact
+          showLabels:true, labelColor:'#FFC599', labelFont:'600 8.5px Inter, sans-serif', labelFmt: fmtCompact
         },
         {
           type:'line', label: activeCategory ? 'Total acumulado' : 'Saldo acumulado', data: series.cum,
-          borderColor: '#FF5FA0', backgroundColor:'#FF5FA0',
-          borderWidth: 2, pointRadius: 2.5, pointBackgroundColor:'#FF5FA0',
+          borderColor: '#F1558E', backgroundColor:'#F1558E',
+          borderWidth: 2, pointRadius: 2.5, pointBackgroundColor:'#F1558E',
           tension: 0.25, order:1
         }
       ]
@@ -990,9 +992,9 @@ function renderMonthly(monthKey){
   acumEl.className = 'kpi-value compact saldo ' + (acumM >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiAcumSubM').textContent = activeCategory ? 'desde ' + DATA.period.min + ' (categoria)' : 'desde ' + DATA.period.min;
 
-  renderSpark('sparkCreditM', series.credit, '#9C8CFF', 'rgba(156,140,255,0.28)', 'rgba(156,140,255,0)');
-  renderSpark('sparkDebitM', series.debit.map(v => Math.abs(v)), '#FF9552', 'rgba(255,149,82,0.28)', 'rgba(255,149,82,0)');
-  renderSpark('sparkSaldoM', series.credit.map((c,i) => c + series.debit[i]), '#FF5FA0', 'rgba(255,95,160,0.28)', 'rgba(255,95,160,0)');
+  renderSpark('sparkCreditM', series.credit, '#A98FE0', 'rgba(169,143,224,0.28)', 'rgba(169,143,224,0)');
+  renderSpark('sparkDebitM', series.debit.map(v => Math.abs(v)), '#FF8529', 'rgba(255,133,41,0.28)', 'rgba(255,133,41,0)');
+  renderSpark('sparkSaldoM', series.credit.map((c,i) => c + series.debit[i]), '#F1558E', 'rgba(241,85,142,0.28)', 'rgba(241,85,142,0)');
 
   const allM = allMonthsSorted();
   const idxM = allM.indexOf(monthKey);
@@ -1002,7 +1004,7 @@ function renderMonthly(monthKey){
     if (activeCategory) { const v = monthValues(m); runningAcum = round2(runningAcum + v.credit + v.debit); return runningAcum; }
     return DATA.monthly[m].cum;
   });
-  renderSpark('sparkAcumM', windowAcum, '#FF5FA0', 'rgba(255,95,160,0.28)', 'rgba(255,95,160,0)');
+  renderSpark('sparkAcumM', windowAcum, '#F1558E', 'rgba(241,85,142,0.28)', 'rgba(241,85,142,0)');
 
   renderDailyCombo(monthKey);
   document.getElementById('dailyDesc').textContent =
@@ -1010,8 +1012,8 @@ function renderMonthly(monthKey){
 
   const cats = DATA.category_by_month[monthKey] || {};
   const {creditEntries, debitEntries} = categoryEntries(cats);
-  renderCategoryBars('creditBarChartM', creditEntries, 'rgba(156,140,255,0.85)', '#C9C2FF');
-  renderCategoryBars('debitBarChartM', debitEntries, 'rgba(255,149,82,0.85)', '#FFC199');
+  renderCategoryBars('creditBarChartM', creditEntries, 'rgba(169,143,224,0.85)', '#D1C3EE');
+  renderCategoryBars('debitBarChartM', debitEntries, 'rgba(255,133,41,0.85)', '#FFC599');
 
   document.getElementById('footerNote').textContent =
     'Dados fictícios (demo) · ' + series.days.length + ' dias com movimentação em ' + MONTH_FULL[monthIdx] + '/' + y;
