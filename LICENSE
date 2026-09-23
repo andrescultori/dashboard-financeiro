@@ -1,21 +1,18 @@
-MIT License
+Copyright (c) 2026 André Scultori
 
-Copyright (c) 2026
+Este repositório é disponibilizado publicamente para fins de portfólio e
+demonstração de habilidades técnicas (case de estudo). É uma adaptação, com
+dados e identificadores substituídos por valores fictícios, de um sistema
+real construído pelo autor para uma instituição educacional sem fins
+lucrativos.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Todos os direitos sobre o código, design e conteúdo deste repositório são
+reservados ao autor. Não é concedida permissão de uso, cópia, modificação,
+redistribuição ou exploração comercial deste código sem autorização prévia
+por escrito do autor.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+A visualização e o estudo do código para fins de avaliação técnica (por
+exemplo, em processos seletivos) são livremente permitidos.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Para solicitar permissão de uso, entre em contato através do GitHub:
+https://github.com/andrescultori

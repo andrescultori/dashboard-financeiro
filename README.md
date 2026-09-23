@@ -4,7 +4,7 @@
 
 Um dashboard financeiro interativo, construído como **um único arquivo HTML autossuficiente** (sem build, sem dependências externas em runtime), alimentado por um pipeline de automação que lê dados direto de um ERP financeiro, consolida, e publica sozinho — sem intervenção manual.
 
-**[🔗 Ver demonstração ao vivo](#)**
+**[🔗 Ver demonstração ao vivo](https://andrescultori.github.io/dashboard-financeiro/)**
 Senha de demonstração: `demo2026`
 
 > ⚠️ **Todos os dados neste repositório são fictícios**, gerados aleatoriamente para fins de demonstração. Este projeto é uma adaptação, com dados substituídos, de um sistema real em produção para uma instituição educacional sem fins lucrativos.
@@ -81,3 +81,5 @@ Senha: `demo2026`
 ---
 
 *Projeto adaptado de um sistema em produção. Dados, nomes e identificadores foram substituídos por valores fictícios para esta demonstração pública.*
+
+Desenvolvido por [André Scultori](https://github.com/andrescultori)  ·  © 2026  ·  [GitHub](https://github.com/andrescultori/dashboard-financeiro)
