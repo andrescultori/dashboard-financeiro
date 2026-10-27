@@ -104,6 +104,17 @@
   .subtitle{ color:var(--text-dim); font-size:13px; margin-top:2px;}
 
   .header-controls{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+  /* Entrada suave dos blocos de cada página (reinicia ao trocar de aba) */
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+  #pageAnnual > *, #pageMonthly > *{ animation: riseIn .6s cubic-bezier(.2,.7,.2,1) both; }
+  #pageAnnual > *:nth-child(1), #pageMonthly > *:nth-child(1){ animation-delay:.00s; }
+  #pageAnnual > *:nth-child(2), #pageMonthly > *:nth-child(2){ animation-delay:.08s; }
+  #pageAnnual > *:nth-child(3), #pageMonthly > *:nth-child(3){ animation-delay:.16s; }
+  #pageAnnual > *:nth-child(4), #pageMonthly > *:nth-child(4){ animation-delay:.24s; }
+  #pageAnnual > *:nth-child(n+5), #pageMonthly > *:nth-child(n+5){ animation-delay:.32s; }
+  @media (prefers-reduced-motion: reduce){
+    #pageAnnual > *, #pageMonthly > *{ animation:none; }
+  }
   .nav-tabs, .year-toggle{
     display:flex; background:var(--panel); border:1px solid var(--border);
     border-radius:10px; padding:4px; gap:2px;
@@ -598,6 +609,63 @@ const valueLabelPlugin = {
 };
 Chart.register(valueLabelPlugin);
 
+/* ===================== ANIMAÇÕES ===================== */
+const REDUCED_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const INTRO_MS = 1000; /* duração da "construção" das linhas, da esquerda para a direita */
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+/* Barras: crescem a partir da base, uma depois da outra */
+function introAnimation(n){
+  if (REDUCED_MOTION) return false;
+  const step = Math.min(45, 600 / Math.max(n, 1));
+  return {
+    duration: 800,
+    easing: 'easeOutQuart',
+    delay: (c) => (c.type === 'data' && c.mode === 'default') ? c.dataIndex * step : 0
+  };
+}
+
+/* Linhas: são "desenhadas" da esquerda para a direita (só na primeira exibição do gráfico;
+   passar o mouse depois não reinicia). */
+const lineRevealPlugin = {
+  id: 'lineReveal',
+  beforeDatasetDraw(chart, args){
+    if (REDUCED_MOTION || args.meta.type !== 'line') return;
+    let st = chart.$reveal;
+    if (!st) st = chart.$reveal = { t0: performance.now(), done: false };
+    if (st.done) return;
+    const t = (performance.now() - st.t0) / INTRO_MS;
+    if (t >= 1) { st.done = true; return; }
+    const a = chart.chartArea, ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(a.left - 8, a.top - 20, (a.right - a.left + 16) * easeOutCubic(Math.max(t, 0)), a.bottom - a.top + 40);
+    ctx.clip();
+    st.clipped = true;
+  },
+  afterDatasetDraw(chart, args){
+    const st = chart.$reveal;
+    if (st && st.clipped) { chart.ctx.restore(); st.clipped = false; }
+  }
+};
+Chart.register(lineRevealPlugin);
+
+/* Números dos cartões: contam de 0 até o valor */
+const _countRaf = new WeakMap();
+function animateValue(el, target, fmt){
+  const prev = _countRaf.get(el);
+  if (prev) cancelAnimationFrame(prev);
+  if (REDUCED_MOTION || !isFinite(target)) { el.textContent = fmt(target); return; }
+  const t0 = performance.now(), dur = 900;
+  const tick = (now) => {
+    const t = Math.min((now - t0) / dur, 1);
+    el.textContent = fmt(target * easeOutCubic(t));
+    if (t < 1) _countRaf.set(el, requestAnimationFrame(tick));
+    else { el.textContent = fmt(target); _countRaf.delete(el); }
+  };
+  _countRaf.set(el, requestAnimationFrame(tick));
+}
+
 function renderSpark(canvasId, values, lineColor, fillTop, fillBottom){
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId).getContext('2d');
@@ -621,7 +689,7 @@ function renderSpark(canvasId, values, lineColor, fillTop, fillBottom){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      animation:{duration:400},
+      animation: REDUCED_MOTION ? false : {duration:1000, easing:'easeOutQuart'},
       plugins:{ legend:{display:false}, tooltip:{enabled:false} },
       scales:{ x:{ display:false }, y:{ display:false } },
       elements:{ line:{ borderJoinStyle:'round' } }
@@ -753,6 +821,7 @@ function renderCombo(year){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      animation: introAnimation(series.labels.length),
       interaction:{ mode:'index', intersect:false },
       layout:{ padding:{ top:16 } },
       plugins:{
@@ -822,6 +891,7 @@ function renderCategoryBars(canvasId, entries, color, labelColor){
     options:{
       indexAxis:'y',
       responsive:true, maintainAspectRatio:false,
+      animation: introAnimation(labels.length),
       layout:{ padding:{ right:46 } },
       onClick: (evt, elements) => {
         if (!elements.length) return;
@@ -875,13 +945,13 @@ function renderAnnual(year){
   document.getElementById('kpiDebitLabel').textContent = activeCategory ? 'Débitos — ' + activeCategory : 'Débitos';
   document.getElementById('kpiSaldoLabel').textContent = activeCategory ? 'Total acumulado' : 'Saldo acumulado';
 
-  document.getElementById('kpiCredit').textContent = fmtBRL(totalCredit);
-  document.getElementById('kpiDebit').textContent = fmtBRLsigned(totalDebit);
+  animateValue(document.getElementById('kpiCredit'), totalCredit, fmtBRL);
+  animateValue(document.getElementById('kpiDebit'), totalDebit, fmtBRLsigned);
   document.getElementById('kpiCreditAvg').textContent = fmtBRL(totalCredit/series.months.length) + ' / mês';
   document.getElementById('kpiDebitAvg').textContent = fmtBRL(Math.abs(totalDebit)/series.months.length) + ' / mês';
 
   const saldoEl = document.getElementById('kpiSaldo');
-  saldoEl.textContent = fmtBRLsigned(saldoFinal);
+  animateValue(saldoEl, saldoFinal, fmtBRLsigned);
   saldoEl.className = 'kpi-value saldo ' + (saldoFinal >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiSaldoSub').textContent = 'posição em ' + MONTH_ABBR[parseInt(lastMonth.split('-')[1],10)-1] + '/' + lastMonth.split('-')[0];
 
@@ -943,6 +1013,7 @@ function renderDailyCombo(monthKey){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      animation: introAnimation(series.labels.length),
       interaction:{ mode:'index', intersect:false },
       layout:{ padding:{ top:16 } },
       plugins:{
@@ -985,15 +1056,15 @@ function renderMonthly(monthKey){
   document.getElementById('kpiSaldoLabelM').textContent = activeCategory ? 'Total do mês' : 'Saldo do mês';
   document.getElementById('kpiAcumLabelM').textContent = activeCategory ? 'Total acumulado' : 'Saldo acumulado';
 
-  document.getElementById('kpiCreditM').textContent = fmtBRL(totalCreditM);
-  document.getElementById('kpiDebitM').textContent = fmtBRLsigned(totalDebitM);
+  animateValue(document.getElementById('kpiCreditM'), totalCreditM, fmtBRL);
+  animateValue(document.getElementById('kpiDebitM'), totalDebitM, fmtBRLsigned);
 
   const saldoMesEl = document.getElementById('kpiSaldoM');
-  saldoMesEl.textContent = fmtBRLsigned(netM);
+  animateValue(saldoMesEl, netM, fmtBRLsigned);
   saldoMesEl.className = 'kpi-value compact saldo ' + (netM >= 0 ? 'pos' : 'neg');
 
   const acumEl = document.getElementById('kpiAcumM');
-  acumEl.textContent = fmtBRLsigned(acumM);
+  animateValue(acumEl, acumM, fmtBRLsigned);
   acumEl.className = 'kpi-value compact saldo ' + (acumM >= 0 ? 'pos' : 'neg');
   document.getElementById('kpiAcumSubM').textContent = activeCategory ? 'desde ' + DATA.period.min + ' (categoria)' : 'desde ' + DATA.period.min;
 
